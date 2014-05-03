@@ -21,6 +21,8 @@
 
 package io.crate.action.sql;
 
+import io.crate.action.sql.parser.SQLHeaderContext;
+import io.crate.action.sql.parser.SQLHeaderParser;
 import io.crate.action.sql.parser.SQLXContentSourceContext;
 import io.crate.action.sql.parser.SQLXContentSourceParser;
 import org.elasticsearch.action.ActionListener;
@@ -32,6 +34,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 public class SQLRequestBuilder extends ActionRequestBuilder<SQLRequest, SQLResponse, SQLRequestBuilder> {
 
     private SQLXContentSourceParser parser;
+    private SQLHeaderParser headerParser;
 
     public SQLRequestBuilder(Client client) {
         super((InternalClient) client, new SQLRequest());
@@ -56,4 +59,12 @@ public class SQLRequestBuilder extends ActionRequestBuilder<SQLRequest, SQLRespo
         return this;
     }
 
+    public SQLRequestBuilder headerIfMatch(String header) throws IllegalArgumentException {
+        SQLHeaderContext context = new SQLHeaderContext();
+        headerParser = new SQLHeaderParser(context);
+        headerParser.parseIfMatch(header);
+        // TODO actually use it.
+        System.out.println(context.ifMatch());
+        return this;
+    }
 }

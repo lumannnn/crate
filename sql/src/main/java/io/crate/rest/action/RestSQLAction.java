@@ -21,6 +21,7 @@
 
 package io.crate.rest.action;
 
+import com.google.common.net.HttpHeaders;
 import io.crate.action.sql.SQLRequestBuilder;
 import io.crate.action.sql.SQLResponse;
 import org.elasticsearch.ElasticsearchException;
@@ -58,6 +59,23 @@ public class RestSQLAction extends BaseRestHandler {
         } catch (Exception e) {
             if (logger.isDebugEnabled()) {
                 logger.debug("failed to parse sql request", e);
+            }
+            try {
+                XContentBuilder builder = restContentBuilder(request);
+                channel.sendResponse(new XContentRestResponse(request, BAD_REQUEST, builder.startObject().field("error",
+                        e.getMessage()).endObject()));
+            } catch (IOException e1) {
+                logger.error("Failed to send failure response", e1);
+            }
+            return;
+        }
+        try {
+            if (request.header("If-Match") != null) {
+                requestBuilder.headerIfMatch(request.header(HttpHeaders.IF_MATCH));
+            }
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("failed to parse HTTP header 'If-Match'", e);
             }
             try {
                 XContentBuilder builder = restContentBuilder(request);
